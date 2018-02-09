@@ -123,7 +123,7 @@ Resources:
                                     "dynamodb:GetItem",
                                     "dynamodb:PutItem",
                                     "dynamodb:UpdateItem",
-                                    "s3:PutItem"
+                                    "s3:PutObject"
                                 ],
                                 "Resource": "*"
                         }]
