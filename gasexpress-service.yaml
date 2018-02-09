@@ -75,8 +75,8 @@ Resources:
                       Value: !Ref NodeURL
                     - Name: "NETWORK"
                       Value: !Ref Network
-                  Cpu: 512
-                  MemoryReservation: 2304
+                  Cpu: 256
+                  MemoryReservation: 2048
                   LogConfiguration:
                     LogDriver: awslogs
                     Options:
