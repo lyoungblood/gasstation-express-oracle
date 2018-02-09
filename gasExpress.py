@@ -6,16 +6,36 @@ import traceback
 import os
 import pandas as pd
 import numpy as np
+import boto3
+import decimal
+from boto3.dynamodb.conditions import Key, Attr
+from botocore.exceptions import ClientError
 from web3 import Web3, HTTPProvider
 
-
-web3 = Web3(HTTPProvider('http://localhost:8545'))
+web3 = Web3(HTTPProvider('http://parity-service-dd9a57463e1e8d20.elb.us-west-2.amazonaws.com:8545'))
 
 ### These are the threholds used for % blocks accepting to define the recommended gas prices. can be edited here if desired
 
 SAFELOW = 35
 STANDARD = 60
 FAST = 90
+
+REGION		= os.environ['REGION_NAME']
+DDB_TABLE	= os.environ['DDB_TABLE_NAME']
+# Network should be one of: mainnet, testnet, rinkeby
+NETWORK     = os.environ['NETWORK']
+dynamodb	= boto3.resource('dynamodb', region_name=REGION)
+table 		= dynamodb.Table(DDB_TABLE)
+
+# Helper class to convert a DynamoDB item to JSON.
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            if o % 1 > 0:
+                return float(o)
+            else:
+                return int(o)
+        return super(DecimalEncoder, self).default(o)
 
 class Timers():
     """
@@ -84,6 +104,39 @@ def write_to_json(gprecs, prediction_table):
 
     except Exception as e:
         print(e)
+        
+def write_to_ddb(gprecs):
+    """write json data"""
+    try:
+        response = table.update_item(
+            ExpressionAttributeNames={
+                '#SL': 'safeLow',
+                '#S': 'standard',
+                '#F': 'fast',
+                '#FE': 'fastest',
+                '#BT': 'block_time',
+                '#BN': 'blockNum'
+            },
+            ExpressionAttributeValues={
+				':sl': decimal.Decimal(gprecs['safeLow']),
+				':s': decimal.Decimal(gprecs['standard']),
+				':f': decimal.Decimal(gprecs['fast']),
+				':fe': decimal.Decimal(gprecs['fastest']),
+				':bt': decimal.Decimal(gprecs['block_time']),
+				':bn': decimal.Decimal(gprecs['blockNum'])
+		    },
+		    Key={
+				'network': NETWORK
+			},
+			ReturnValues="UPDATED_NEW",
+			TableName=DDB_TABLE,
+		    UpdateExpression="set #SL = :sl, #S = :s, #F = :f, #FE = :fe, #BT = :bt, #BN = :bn",
+		)
+    except ClientError as err:
+        print(err.response['Error']['Message'])
+#    else:
+#        print("UpdateItem succeeded:")
+#        print(json.dumps(response, indent=4, cls=DecimalEncoder))
 
 def process_block_transactions(block):
     """get tx data from block"""
@@ -132,7 +185,6 @@ def analyze_last200blocks(block, blockdata):
     if np.isnan(avg_timemined):
         avg_timemined = 15
     return(hashpower, avg_timemined)
-
 
 def make_predictTable(block, alltx, hashpower, avg_timemined):
 
@@ -231,6 +283,10 @@ def master_control():
 
             #every block, write gprecs, predictions    
             write_to_json(gprecs, predictiondf)
+            
+            #every block, write gprecs to DynamoDB
+            write_to_ddb(gprecs)
+            
             return True
 
         except: 
