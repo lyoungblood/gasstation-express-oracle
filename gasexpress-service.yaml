@@ -31,6 +31,11 @@ Parameters:
     Cluster:
         Description: Please provide the ECS Cluster ID that this service should run on
         Type: String
+        
+    Bucket:
+        Description: The name of the S3 bucket where the JSON file should be output
+        Type: String
+        Default: "blockscale-api-dev"
 
 Resources:
 
@@ -75,6 +80,8 @@ Resources:
                       Value: !Ref NodeURL
                     - Name: "NETWORK"
                       Value: !Ref Network
+                    - Name: "BUCKET"
+                      Value: !Ref Bucket
                   Cpu: 256
                   MemoryReservation: 2048
                   LogConfiguration:
@@ -115,7 +122,8 @@ Resources:
                                 "Action": [
                                     "dynamodb:GetItem",
                                     "dynamodb:PutItem",
-                                    "dynamodb:UpdateItem"
+                                    "dynamodb:UpdateItem",
+                                    "s3:PutItem"
                                 ],
                                 "Resource": "*"
                         }]

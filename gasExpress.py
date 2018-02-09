@@ -24,6 +24,8 @@ REGION		= os.environ['REGION_NAME']
 DDB_TABLE	= os.environ['DDB_TABLE_NAME']
 # Network should be one of: mainnet, testnet, rinkeby
 NETWORK     = os.environ['NETWORK']
+bucket      = os.environ['BUCKET']
+s3          = boto3.client('s3')
 dynamodb	= boto3.resource('dynamodb', region_name=REGION)
 table 		= dynamodb.Table(DDB_TABLE)
 
@@ -93,7 +95,7 @@ def write_to_json(gprecs, prediction_table):
     try:
         prediction_table['gasprice'] = prediction_table['gasprice']/10
         prediction_tableout = prediction_table.to_json(orient='records')
-        filepath_gprecs = 'ethgasAPI.json'
+        filepath_gprecs = 'gasexpress.json'
         filepath_prediction_table = 'predictTable.json'
         
         with open(filepath_gprecs, 'w') as outfile:
@@ -137,6 +139,19 @@ def write_to_ddb(gprecs):
 #    else:
 #        print("UpdateItem succeeded:")
 #        print(json.dumps(response, indent=4, cls=DecimalEncoder))
+
+def write_to_s3(gprecs):
+    """write json data"""
+    try:
+        response = s3.put_object(
+            Body=json.dumps(gprecs),
+            Bucket=bucket,
+            CacheControl='max-age=15',
+            ContentType='application/json',
+            Key='api/gasexpress.json',
+		)
+    except ClientError as err:
+        print(err.response['Error']['Message'])
 
 def process_block_transactions(block):
     """get tx data from block"""
@@ -286,6 +301,9 @@ def master_control():
             
             #every block, write gprecs to DynamoDB
             write_to_ddb(gprecs)
+            
+            #every block, write gprecs to S3
+            write_to_s3(gprecs)
             
             return True
 
