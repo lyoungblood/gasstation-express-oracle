@@ -1,12 +1,16 @@
+boto3==1.5.25
+botocore==1.8.39
 certifi==2017.11.5
 chardet==3.0.4
 cytoolz==0.8.2
+docutils==0.14
 eth-abi==0.5.0
 eth-keyfile==0.4.0
 eth-keys==0.1.0b3
 eth-tester==0.1.0b5
 eth-utils==0.7.1
 idna==2.6
+jmespath==0.9.3
 numpy==1.13.3
 pandas==0.21.0
 pycryptodome==3.4.7
@@ -16,6 +20,7 @@ python-dateutil==2.6.1
 pytz==2017.3
 requests==2.18.4
 rlp==0.6.0
+s3transfer==0.1.12
 scipy==1.0.0
 semantic-version==2.6.0
 six==1.11.0
