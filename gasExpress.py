@@ -12,14 +12,14 @@ from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 from web3 import Web3, HTTPProvider
 
-web3 = Web3(HTTPProvider(os.environ['NODE_URL'])
-
 ### These are the threholds used for % blocks accepting to define the recommended gas prices. can be edited here if desired
 
 SAFELOW = 35
 STANDARD = 60
 FAST = 90
 
+NODE        = os.environ['NODE_URL']
+web3        = Web3( HTTPProvider( NODE ) )
 REGION		= os.environ['REGION_NAME']
 DDB_TABLE	= os.environ['DDB_TABLE_NAME']
 # Network should be one of: mainnet, testnet, rinkeby
