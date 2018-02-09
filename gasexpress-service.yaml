@@ -73,6 +73,8 @@ Resources:
                       Value: !Ref Table
                     - Name: "NODE_URL"
                       Value: !Ref NodeURL
+                    - Name: "NETWORK"
+                      Value: !Ref Network
                   Cpu: 512
                   MemoryReservation: 2304
                   LogConfiguration:
