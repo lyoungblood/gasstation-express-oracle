@@ -12,7 +12,7 @@ from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 from web3 import Web3, HTTPProvider
 
-web3 = Web3(HTTPProvider('http://parity-service-dd9a57463e1e8d20.elb.us-west-2.amazonaws.com:8545'))
+web3 = Web3(HTTPProvider(os.environ['NODE_URL'])
 
 ### These are the threholds used for % blocks accepting to define the recommended gas prices. can be edited here if desired
 

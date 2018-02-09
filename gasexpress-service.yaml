@@ -1,0 +1,132 @@
+Description: >
+    This template deploys the gas station express oracle that updates
+    the gasexpress table in DynamoDB. It is a singleton python3 application.
+    Created by Luke Youngblood, luke.youngblood@gmail.com
+Parameters: 
+
+    EnvironmentName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+        
+    DockerImage:
+        Description: The Docker image to pull from your container registry
+        Type: String
+        Default: "925347006371.dkr.ecr.us-west-2.amazonaws.com/gasexpress:latest"
+        
+    Table:
+        Description: The name of the DynamoDB table that you would like to create
+        Type: String
+        Default: "gasexpress"
+        
+    Network:
+        Description: The Ethereum network stored in the table
+        Type: String
+        Default: "mainnet"
+        
+    NodeURL:
+        Description: The URL of your Ethereum node
+        Type: String
+        Default: "http://parity-service-dd9a57463e1e8d20.elb.us-west-2.amazonaws.com:8545"
+
+    Cluster:
+        Description: Please provide the ECS Cluster ID that this service should run on
+        Type: String
+
+Resources:
+
+    DDBTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            AttributeDefinitions:
+                - AttributeName: "network"
+                  AttributeType: "S"
+                - AttributeName: "safeLow"
+                  AttributeType: "N"
+                - AttributeName: "standard"
+                  AttributeType: "N"
+                - AttributeName: "fast"
+                  AttributeType: "N"
+                - AttributeName: "fastest"
+                  AttributeType: "N"
+                - AttributeName: "block_time"
+                  AttributeType: "N"
+                - AttributeName: "blockNum"
+                  AttributeType: "N"
+            KeySchema:
+                - AttributeName: "network"
+                  KeyType: "HASH"
+            ProvisionedThroughput:
+                ReadCapacityUnits: "5"
+                WriteCapacityUnits: "5"
+            TableName: !Ref Table
+
+    Service: 
+        Type: AWS::ECS::Service
+        DependsOn: DDBTable
+        Properties: 
+            Cluster: !Ref Cluster
+            DesiredCount: 1
+            TaskDefinition: !Ref TaskDefinition
+
+    TaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        Properties:
+            Family: gasexpress
+            TaskRoleArn: !Ref TaskRole
+            NetworkMode: bridge
+            ContainerDefinitions:
+                - Name: gasexpress
+                  Essential: true
+                  Image: !Ref DockerImage
+                  Environment:
+                    - Name: "REGION_NAME"
+                      Value: !Ref AWS::Region
+                    - Name: "DDB_TABLE_NAME"
+                      Value: !Ref Table
+                    - Name: "NODE_URL"
+                      Value: !Ref NodeURL
+                  Cpu: 512
+                  MemoryReservation: 2304
+                  LogConfiguration:
+                    LogDriver: awslogs
+                    Options:
+                        awslogs-group: !Ref AWS::StackName
+                        awslogs-region: !Ref AWS::Region
+                        awslogs-stream-prefix: !Ref EnvironmentName
+
+    CloudWatchLogsGroup:
+        Type: AWS::Logs::LogGroup
+        Properties: 
+            LogGroupName: !Ref AWS::StackName
+            RetentionInDays: 14
+
+    # This IAM Role grants the task access update the DynamoDB table
+    TaskRole:
+        Type: AWS::IAM::Role
+        Properties:
+            RoleName: !Sub ecs-task-${AWS::StackName}
+            Path: /
+            AssumeRolePolicyDocument: |
+                {
+                    "Statement": [{
+                        "Sid": "",
+                        "Effect": "Allow",
+                        "Principal": { "Service": [ "ecs-tasks.amazonaws.com" ]},
+                        "Action": "sts:AssumeRole"
+                    }]
+                }
+            Policies: 
+                - PolicyName: !Sub ecs-task-${AWS::StackName}
+                  PolicyDocument: 
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": [{
+                                "Effect": "Allow",
+                                "Action": [
+                                    "dynamodb:GetItem",
+                                    "dynamodb:PutItem",
+                                    "dynamodb:UpdateItem"
+                                ],
+                                "Resource": "*"
+                        }]
+                    }
