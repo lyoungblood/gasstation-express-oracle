@@ -40,18 +40,6 @@ Resources:
             AttributeDefinitions:
                 - AttributeName: "network"
                   AttributeType: "S"
-                - AttributeName: "safeLow"
-                  AttributeType: "N"
-                - AttributeName: "standard"
-                  AttributeType: "N"
-                - AttributeName: "fast"
-                  AttributeType: "N"
-                - AttributeName: "fastest"
-                  AttributeType: "N"
-                - AttributeName: "block_time"
-                  AttributeType: "N"
-                - AttributeName: "blockNum"
-                  AttributeType: "N"
             KeySchema:
                 - AttributeName: "network"
                   KeyType: "HASH"
