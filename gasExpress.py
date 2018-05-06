@@ -146,7 +146,7 @@ def write_to_s3(gprecs):
         response = s3.put_object(
             Body=json.dumps(gprecs),
             Bucket=bucket,
-            CacheControl='max-age=15',
+            CacheControl='max-age=10',
             ContentType='application/json',
             Key='api/gasexpress.json',
 		)
