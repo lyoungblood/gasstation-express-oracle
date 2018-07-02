@@ -65,15 +65,26 @@ class CleanTx():
         data = {self.hash: {'block_mined':self.block_mined, 'gas_price':self.gas_price, 'round_gp_10gwei':self.gp_10gwei}}
         return pd.DataFrame.from_dict(data, orient='index')
 
+#    def round_gp_10gwei(self):
+#        """Rounds the gas price to gwei"""
+#        gp = self.gas_price/1e8
+#        if gp >= 1 and gp < 10:
+#            gp = np.floor(gp)
+#        elif gp >= 10:
+#            gp = gp/10
+#            gp = np.floor(gp)
+#            gp = gp*10
+#        else:
+#            gp = 0
+#        self.gp_10gwei = gp
+
+# 7/2/18 - Refactored the round_gp_10gwei function to make it much simpler and remove cruft
+
     def round_gp_10gwei(self):
         """Rounds the gas price to gwei"""
         gp = self.gas_price/1e8
-        if gp >= 1 and gp < 10:
+        if gp >= 1:
             gp = np.floor(gp)
-        elif gp >= 10:
-            gp = gp/10
-            gp = np.floor(gp)
-            gp = gp*10
         else:
             gp = 0
         self.gp_10gwei = gp
@@ -204,7 +215,7 @@ def analyze_last200blocks(block, blockdata):
 def make_predictTable(block, alltx, hashpower, avg_timemined):
 
     #predictiontable
-    predictTable = pd.DataFrame({'gasprice' :  range(10, 1010, 10)})
+    predictTable = pd.DataFrame({'gasprice' :  range(10, 5000, 10)})
     ptable2 = pd.DataFrame({'gasprice' : range(0, 10, 1)})
     predictTable = predictTable.append(ptable2).reset_index(drop=True)
     predictTable = predictTable.sort_values('gasprice').reset_index(drop=True)
