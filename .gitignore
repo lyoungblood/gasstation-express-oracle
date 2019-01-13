@@ -2,3 +2,4 @@ ethgasAPI.json
 gasexpress.json
 predictTable.json
 gasstation-express-oracle/
+venv/**
