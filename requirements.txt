@@ -4,7 +4,7 @@ base58==2.0.1
 bitarray==1.2.2
 boto3==1.14.12
 botocore==1.17.12
-certifi==2020.6.20
+certifi==2022.12.7
 chardet==3.0.4
 cytoolz==0.10.1
 docutils==0.16
